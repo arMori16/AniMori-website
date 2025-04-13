@@ -1,0 +1,23 @@
+html{
+    width: 100%;
+}
+body{
+    width:100%;
+}
+
+.div-content-container{
+    margin-top: 20px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    display:flex;
+    width:1000px;
+    height:2000px;
+    background-color: #F7F3F7;
+}
+
+/* @media (max-width:480px){
+    .xuy{
+        margin-right: auto;
+        margin-left: auto;
+    }
+} */

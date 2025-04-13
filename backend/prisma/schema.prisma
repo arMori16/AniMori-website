@@ -1,0 +1,205 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User{
+  id Int @id @default(autoincrement())
+  role String @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  firstName String @unique
+
+  email String @unique
+  atToken String?
+  hash String 
+  hashedRT String?
+
+  warn Int @default(0)
+  isBanned Boolean @default(false)
+
+  viewedSeries LastViewedSeries[] @relation("viewedSeries")
+  comments Comments[] @relation("UserComments")
+  username Comments[] @relation("UserName")
+  userId Rate[] @relation("UserId")
+  userList UserList[] @relation("UserList")
+  like Like[] @relation("Likes")
+  participant Participant?
+  room Room?
+  participantUserName Participant? @relation("UserName")
+  views Views[] @relation()
+  @@map("users")
+}
+
+model InfoSeries{
+  SeriesName String @id 
+  AlternitiveNames String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  SeriesViewName String @unique
+  Description String?
+  Status String
+  Type String
+  ReleaseYear String?
+  Shikimori String?
+  Genre String[] @default([])
+  Studio String[] @default([])
+  AmountOfEpisode Int?
+  VoiceActing String[] @default([])
+  CurrentEpisode Int?
+  NextEpisodeTime String?
+
+  comments Comments[] @relation("SeriesComments")
+  rate Rate[] @relation("SeriesName")
+  viewedSeries LastViewedSeries[] @relation("viewedSeries")
+  viewedSeriesViewName LastViewedSeries[] @relation("viewedSeriesViewName")
+  userList UserList[] @relation("UserList")
+  userListViewName UserList[] @relation("UserListViewName")
+  room Room[] 
+  carouselSeriesName Carousel[] @relation("CarouselSeriesName")
+  carouselSeriesViewName Carousel[] @relation("CarouselSeriesViewName")
+  commentLikes Like[] @relation("Likes")
+  views Views[] @relation()
+}
+
+model Views {
+  Id Int @id @default(autoincrement())
+  IP String? 
+  UserId Int? 
+  SeriesName String
+
+  seriesName InfoSeries @relation(fields: [SeriesName],references: [SeriesName])
+  userId User? @relation(fields: [UserId],references: [id])
+  @@unique([IP, SeriesName])
+  @@unique([UserId, SeriesName])
+}
+
+model Carousel {
+  SeriesName String @unique
+  SeriesViewName String @unique
+
+  seriesName InfoSeries @relation("CarouselSeriesName",fields: [SeriesName],references: [SeriesName])
+  seriesViewName InfoSeries @relation("CarouselSeriesViewName",fields: [SeriesViewName],references: [SeriesViewName])
+}
+
+model Comments{
+  Id Int @id @default(autoincrement())
+  SeriesName String 
+  ParentId Int?
+  UserId Int
+  CommentText String
+  UserName String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  series InfoSeries? @relation("SeriesComments",fields: [SeriesName],references: [SeriesName],onDelete: Cascade)
+  parent Comments? @relation("ParentChild",fields: [ParentId],references: [Id],onDelete: Cascade)
+  Children Comments[] @relation("ParentChild")
+  user User? @relation("UserComments",fields: [UserId],references: [id],onDelete: Cascade)
+  username User? @relation("UserName",fields: [UserName],references: [firstName])
+  likes Like[] @relation("Likes")
+}
+
+model Like{
+  UserId Int
+  SeriesName String
+  CommentId Int
+  Type LikeType
+
+  user User @relation("Likes",fields: [UserId],references: [id],onDelete: Cascade)
+  comment Comments @relation("Likes",fields: [CommentId],references: [Id],onDelete: Cascade)
+  seriesName InfoSeries @relation("Likes",fields: [SeriesName],references: [SeriesName],onDelete: Cascade)
+  @@id([UserId,CommentId])
+}
+
+model Rate{
+  Id Int @id @default(autoincrement())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  Value Int
+
+  UserId Int
+  SeriesName String
+
+  userId User @relation("UserId",fields: [UserId],references: [id],onDelete: Cascade)
+  seriesName InfoSeries @relation("SeriesName",fields: [SeriesName],references: [SeriesName],onDelete: Cascade)
+  @@unique([UserId, SeriesName])
+}
+
+model LastViewedSeries {
+    Id          Int      @id @default(autoincrement())
+    UserId      Int
+    SeriesName  String
+    SeriesViewName String
+    Episode     Int
+    LastViewed  DateTime @default(now())
+    TimeStopped Int?
+
+    user User @relation("viewedSeries",fields: [UserId], references: [id], onDelete: Cascade)
+    series InfoSeries @relation("viewedSeries",fields: [SeriesName], references: [SeriesName], onDelete: Cascade)
+    seriesViewName InfoSeries @relation("viewedSeriesViewName",fields: [SeriesViewName], references: [SeriesViewName], onDelete: Cascade)
+    @@unique([UserId, SeriesName, Episode])
+}
+
+model Room {
+  Id          Int       @id @default(autoincrement())
+  Code        String    @unique  
+  SeriesName  String                    
+  HostId      Int       @unique                                                                 
+  createdAt   DateTime  @default(now())                                           
+  isActive    Boolean   @default(true)              
+
+  // Relations
+  host        User      @relation(fields: [HostId], references: [id])
+  seriesName  InfoSeries @relation(fields: [SeriesName], references: [SeriesName])
+  participants Participant[]
+}
+
+model Participant {
+  Id       Int      @id @default(autoincrement())  
+  UserId   Int      @unique                              
+  RoomId   Int                                     
+  JoinedAt DateTime @default(now())               
+  IsHost   Boolean  @default(false)               
+  UserName String   @unique
+  // Relations
+  user     User     @relation(fields: [UserId], references: [id])
+  userName User     @relation("UserName",fields: [UserName],references: [firstName])
+  room     Room     @relation(fields: [RoomId], references: [Id],onDelete: Cascade)
+}
+
+model UserList {
+  UserId Int
+  SeriesName String
+  SeriesViewName String
+  Status SeriesStatus?
+  Favorite Boolean?
+
+  user User @relation("UserList",fields: [UserId], references: [id], onDelete: Cascade)
+  series InfoSeries @relation("UserList",fields: [SeriesName], references: [SeriesName], onDelete: Cascade)
+  seriesViewName InfoSeries @relation("UserListViewName",fields: [SeriesViewName], references: [SeriesViewName], onDelete: Cascade)
+  @@unique([UserId,SeriesName])
+  @@unique([UserId, SeriesName, Status]) 
+}
+enum SeriesStatus {
+  Watching
+  Planned
+  Completed
+  OnHold
+  Dropped
+}
+enum LikeType {
+  Like
+  Dislike
+}

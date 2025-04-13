@@ -1,0 +1,25 @@
+version: '3.8'
+services:
+  app:
+    image: armori1/anime-project:v1.0
+    container_name: anime-project
+    ports:
+      - 8081:8080
+    environment:
+      - DATABASE_HOST=localhost
+      - DATABASE_USER=arMori
+      - DATABASE_PASSWORD=BODAzopa2020
+    depends_on:
+      - dev-db
+  dev-db:
+    image: postgres:16
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: arMori
+      POSTGRES_PASSWORD: BODAzopa2020
+      POSTGRES_DB: anime
+    networks:
+      - armori
+networks:
+  armori:

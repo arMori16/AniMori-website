@@ -1,0 +1,20 @@
+import mjml2html from 'mjml';
+
+const generateEmail = (code:string)=>{
+    const mjmlTemplate = `
+    <mjml>
+    <mj-body>
+        <mj-section>
+        <mj-column>
+            <mj-text font-size="20px" color="#F45E43" font-family="Helvetica">
+            Ваш код верификации
+            </mj-text>
+            <mj-text>
+            Ваш код: {{code}}
+            </mj-text>
+        </mj-column>
+        </mj-section>
+    </mj-body>
+    </mjml>
+    `
+}

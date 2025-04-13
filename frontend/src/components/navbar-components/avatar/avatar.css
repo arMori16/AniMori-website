@@ -1,0 +1,43 @@
+
+.overlay-container{
+    width: 100%;
+    height: 100%;
+    background-color: #B3DCC5;
+}
+/*  */
+/* Profiles */
+.profile{
+    position: relative;
+    row-gap: 8px;
+    display: flex;
+    padding: 8px 16px;
+    width:256px;
+    height:64px;
+}
+.profile-2{
+    position: relative;
+    row-gap: 8px;
+    display: flex;
+    padding: 8px 16px;
+    width:256px;
+    height:48px;
+}
+.profile-item{
+    column-gap: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width:100%;
+    height:100%;
+}
+/*  */
+/* Profile's texts */
+.view-profile-text{
+    display: flex;
+    margin: 10px 5px;
+}
+.view-profile-text-2{
+    display: flex;
+    margin: 5px 5px;
+}
+/*  */

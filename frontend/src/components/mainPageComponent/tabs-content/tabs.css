@@ -1,0 +1,17 @@
+.skeleton{
+    animation: skeleton-img 1s linear infinite alternate;
+}
+
+.skeleton-text{
+    width: 290px;
+    height: 12px;
+    margin-bottom: 5px;
+}
+@keyframes skeleton-img{
+    0%{
+        background-color: hsl(200, 20%, 65%);
+    }
+    100%{
+        background-color: hsl(200, 20%, 95%);
+    }
+}

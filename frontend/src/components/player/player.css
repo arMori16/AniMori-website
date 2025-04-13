@@ -1,0 +1,220 @@
+.player-container{
+    transition-delay: 0s;
+    transition: opacity 1s ease-in-out;
+}
+.controls[value = 'none']{
+    opacity: 1;
+}
+.controls[value = 'show']{
+    opacity: 0;
+}
+.player-container:hover .controls,
+.player-container:focus-within .controls,
+.player-container.paused .controls{
+    transition-delay: 0s;
+    opacity: 1;
+}
+
+.player-container:not(:hover):not(.paused) .controls {
+    transition-delay: 5s; /* Задержка исчезновения на 5 секунд */
+    opacity: 0;
+}
+@keyframes hideControls {
+  0% {
+      opacity: 1;
+  }
+  100% {
+      opacity: 0;
+  }
+}
+/* @keyframes expandRange {
+  0% {
+    width: 0px;
+    transform: scaleX(0);
+  }
+  100% {
+    width: 80px;
+    transform: scaleX(1);
+  }
+}
+@keyframes collapseRange{
+  0%{
+    width:80px;
+    transform-origin: right;
+    transform:scaleX(1);
+  }
+  100% {
+    transform-origin: right;
+    width: 0px;
+    transform: scaleX(0);
+  }
+} */
+.video .fullscreen{
+  min-height: 90%;
+}
+.player-container .fullscreen{
+  min-height: 90%;
+  max-height: none;
+}
+
+.player-container:not(:hover):not(.paused) .controls {
+  selector{cursor:none;}
+  animation: hideControls 0.5s ease 5s forwards; /* Запускаем анимацию скрытия через 5 секунд после убирания курсора */
+}
+.mytest{
+    color: white;
+    transition:color 0.5s ease;
+}
+.mytest:hover{
+    color: aquamarine;
+}
+
+
+.volume-high-icon,
+.volume-low-icon,
+.volume-muted-icon{
+    display: none;
+}
+.player-container[data-volume-level = 'high'] .volume-high-icon{
+    display: block;
+}
+.player-container[data-volume-level = 'low'] .volume-low-icon{
+    display: block;
+}
+.player-container[data-volume-level = 'muted'] .volume-muted-icon{
+    display: block;
+}
+
+
+.custom-range {
+    -webkit-appearance: none; 
+    /* right: 0; */ /* Убираем дефолтный стиль */
+    position: relative;
+    right: 0;
+    width: 0px;
+    cursor:pointer;
+    transform-origin: right;
+    transform: scaleX(0);
+    /* transition:width 0.3s ease-out, transform 0.3s ease-in-out; */
+    height: 5px;
+    background: #ddd; /* Цвет заднего фона ползунка */
+    border-radius: 5px; /* Скругленные углы */
+    outline: none; /* Убираем обводку при фокусе */
+    /* transition: background 0.3s ease; */
+  }
+  .custom-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px; /* Размер "ползунка" */
+    height: 10px;
+    background: #F7F3F7; /* Цвет "ползунка" */
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s ease,transform 0.3s ease-in-out;;
+  }
+
+  .custom-range::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    background: #F7F3F7;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .custom-range::-ms-thumb {
+    width: 10px;
+    height: 10px;
+    background: #F7F3F7;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .custom-range:hover {
+    background: #ccc; /* Цвет при наведении */
+  }
+
+
+  .custom-range:active::w-webkit-slider-thumb {
+    background: #B3DCC5; /* Цвет ползунка при активном клике */
+  }
+  .volume-container:not(:hover) .custom-range{
+    width:0px;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: width 0.5s ease-in-out, transform 0.5s ease-in-out;
+    transition-delay: 2s;
+    /* opacity: 0; */
+}
+  .volume-container:hover .custom-range{
+    position: relative;
+    width: 80px;
+    transform: scaleX(1);
+  }
+  @media (max-width: 36.25rem) {
+    .volume-container:not(:hover) .custom-range{
+      width: 2rem;
+      transform: scaleX(1);
+    }
+  }
+  .timeline-container:hover .timeline{
+    height:100%;
+  }
+  .timeline{
+    cursor: pointer;
+    background-color: rgba(100,100,100,.5);
+  }
+  .timeline::before{
+    content: "";
+    position: absolute;
+    left:0;
+    height:100%;
+    right: calc(100% - var(--preview-position)* 100%);
+    background-color: rgb(200, 200, 200);
+    display: none;
+  }
+  .timeline::after{
+    content:"";
+    position: absolute;
+    left:0;
+    height:100%;
+    right: calc(100% - var(--progress-position,)* 100%);
+    background-color: #B3DCC5;
+  }
+  .timeline .thumb-indicator{
+    --scale:0;
+    position: absolute;
+    height:140%;
+    top:-1.5px;
+    transform:translateX(-50%) scale(var(--scale));
+    left:calc(var(--progress-position)*100%);
+    border-radius: 50%;
+    background-color: #B3DCC5;
+    transition: transform 150ms ease-in-out;
+    aspect-ratio: 1/1;
+  }
+  .timeline-container:hover .thumb-indicator{
+    --scale: 1;
+  }
+  .timeline-container:hover .timeline::before{
+    display:block;
+  }
+  video::-webkit-media-controls{
+    display:none !important;
+  }
+  :fullscreen .controls {
+    display: flex; /* Или любой другой стиль отображения */
+  }
+  .disabled-controls{
+    pointer-events: none;
+  }
+  .loading{
+    animation: rotate 3s linear infinite;
+  }
+  @keyframes rotate{
+    0%{
+      transform: rotate(0deg);
+    }
+    100%{
+      transform: rotate(360deg);
+    }
+  }
