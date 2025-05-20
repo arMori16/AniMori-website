@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EnumPlayerQuality, HTMLCustomVideoElement } from "./types/player.type";
-import Hls from "hls.js";
 import axios from "../../api/axios";
-import axiosDefault from "axios";
 import playbackPosition from "../useZustand/zustandStorage";
 import numOfEpisodeStorage from "../useZustand/player/zustandNumOfEpisode";
 import voiceStorage from "../useZustand/player/zustandVoice";
@@ -20,11 +18,11 @@ const usePlayer =(seriesName?:string,seriesViewName?:string)=>{
     const {updateCurrentTime,getCurrentTime} = playbackPosition();
     
     useEffect(() => {
-        const handleClick = () => {
+        /* const handleClick = () => {
             togglePlayPause();
-        };
+        }; */
         
-        playRef.current?.addEventListener("click", handleClick);
+        // playRef.current?.addEventListener("click", handleClick);
         const handleTimeUpdate = () => {
             if (isPlaying && playRef.current) {
                 updateCurrentTime(String(playRef.current.currentTime));
@@ -32,46 +30,44 @@ const usePlayer =(seriesName?:string,seriesViewName?:string)=>{
         };
         playRef.current?.addEventListener("timeupdate",handleTimeUpdate);
 
+        const atToken = Cookies.get('accessToken');
+        if (!isPlaying && playRef.current?.paused && atToken && seriesViewName) {
+            axios.put(
+                '/user/lastViewedSeries',
+                {
+                    seriesName: seriesName,
+                    episode: getNumOfEpisode(),
+                    timeStopped: getCurrentTime(),
+                    lastViewedDate:new Date()
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${atToken}`,
+                    },
+                }
+            )
+        }
         // Очистка события
         return () => {
             playRef.current?.removeEventListener("timeupdate",handleTimeUpdate);
-            playRef.current?.removeEventListener("click", handleClick);
+            // playRef.current?.removeEventListener("click", handleClick);
         };
     }, [isPlaying, updateCurrentTime]);
       
-    const togglePlayPause = (socket?:boolean)=>{
+    const togglePlayPause = ()=>{
         if(typeof window === "undefined") return;
         setIsPlaying(prev => {
             if (prev) {
                 // If was playing, now we pause
                 playRef.current?.pause();
-                const atToken = Cookies.get('accessToken');
-                if (atToken && seriesViewName && !socket) {
-                    axios.put(
-                        '/user/lastViewedSeries',
-                        {
-                            seriesName: seriesName,
-                            episode: getNumOfEpisode(),
-                            timeStopped: getCurrentTime(),
-                        },
-                        {
-                            headers: {
-                                Authorization: `Bearer ${atToken}`,
-                            },
-                        }
-                    )
-                }
             } else {
-                
                 if (!playRef.current) return prev;
-                
                 playRef.current?.play();
             }
-    
             return !prev; // Toggle state based on previous value
         });
     }
-    const toggleShowPlay = async(socket?:boolean)=>{
+    const toggleShowPlay = async()=>{
         if(typeof window === "undefined") return;
         if(!playRef.current) return;
         if(isShowPlay){
@@ -84,7 +80,7 @@ const usePlayer =(seriesName?:string,seriesViewName?:string)=>{
                     'Authorization':`Bearer ${atToken}`
                 }
             })
-            if(atToken && !socket){
+            if(atToken){
                 axios.post('/user/lastViewedSeries',{
                     seriesName:seriesName,
                     seriesViewName:seriesViewName,
@@ -106,7 +102,7 @@ const usePlayer =(seriesName?:string,seriesViewName?:string)=>{
                 playRef.current.currentTime = Number(lastTime.data.TimeStopped) || 0
                 
             }
-            togglePlayPause(socket && true);
+            togglePlayPause();
         }
         
         setIsShowPlay(!isShowPlay);

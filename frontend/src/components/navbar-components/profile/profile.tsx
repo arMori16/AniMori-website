@@ -11,9 +11,7 @@ import ClientPoster from "@/Images/ClientPoster";
 const ProfileUserList = ({userId,isOwner}:{userId:number,isOwner:boolean})=>{
     const {listItem,getUserListItem,setUserListItem} = useProfileListItems();
     const [itemsInfo,setItemsInfo] = useState<any[]>([]);
-    const [isAnimating,setIsAnimating] = useState(false);
     const [currentItems,setCurrentItems] = useState<any[]>([]);
-    const divRef = useRef<HTMLDivElement>(null);
     const [openItemSettings,setOpenItemSettings] = useState<any[]>([]);
     const [counts,setCounts] = useState<any[]>([]);
     const handleToggleListItems = (item:any)=>{
@@ -108,25 +106,6 @@ const ProfileUserList = ({userId,isOwner}:{userId:number,isOwner:boolean})=>{
         deleteUserListItem(item.SeriesName);
         toast.info('Removed successffully from your list :)');
     }
-    /* const handleAnimation = (item:any)=>{
-        if(divRef.current){
-            console.log(`URA`);
-            
-            if((item?.opened ?? false)){
-                divRef.current.classList.add("userListSettingsIn");
-                setTimeout(()=>{
-                    handleOpenCloseSettings(item.SeriesName);
-                    divRef.current?.classList.remove("userListSettingsIn");
-                })
-            }else{
-                divRef.current.classList.add("userListSettingsOut");
-                setTimeout(()=>{
-                    handleOpenCloseSettings(item.SeriesName);
-                    divRef.current?.classList.remove("userListSettingsOut");
-                })
-            }
-        }
-    } */
     return(
         <div className={`flex mt-[2rem] w-[87%] flex-col rounded-t-md`}>
              <div className="flex w-full h-[3.15rem] bg-gray-2E border-b-4 overflow-x-scroll overflow-y-hidden" style={{borderColor: list.find(item => item.key === getUserListItem())?.color}}>
@@ -152,14 +131,14 @@ const ProfileUserList = ({userId,isOwner}:{userId:number,isOwner:boolean})=>{
                         <p>{item.SeriesViewName}</p>
                     </div>
                     {isOwner && (
-                        <div className="flex h-full absolute right-0 z-20 max-w-[20rem] flex-grow justify-end text-white">
-                            <div className={`flex transition-all duration-500 ease-out overflow-hidden`} 
+                        <div className="flex h-full absolute right-0 z-20 max-w-[20rem] flex-grow justify-end text-white overflow-hidden">
+                            <div className={`flex transition-transform duration-700 ease-out overflow-hidden origin-right`} 
                                 style={openItemSettings.find((items:any)=>items.SeriesName === item.SeriesName && items.opened) 
-                                    ? { maxWidth: "20rem", opacity: 1 } 
-                                    : { maxWidth: "0px", opacity: 0 }}
+                                    ? { transform:'translateX(0%)'} 
+                                    : { transform:'translateX(100%)' }}
                             >
                                 {list.map((items:any,index:any)=>(
-                                    <button onClick={()=>handleUpdateUserList(item,items.key)} key={index} className={`flex w-[2.8rem] items-center hover:!bg-[${items.color}] duration-500 ease-in-out transition-colors justify-center h-full border-r-[1px] bg-gray-100 border-r-gray-2E `} style={{backgroundColor:listItem === items.key ? `${items.color}`: ''}}
+                                    <button onClick={()=>handleUpdateUserList(item,items.key)} key={index} className={`flex w-[2.8rem] items-center duration-500 ease-in-out transition-colors justify-center h-full border-r-[1px] bg-gray-100 border-r-gray-2E `} style={{backgroundColor:listItem === items.key ? `${items.color}`: ''}}
                                     onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = items.color)}
                                     onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = listItem === items.key ? items.color : '')}
                                     >

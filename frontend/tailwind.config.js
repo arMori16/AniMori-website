@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-const gray = require('./tailwind/tailwind.color')
+const colors = require('./tailwind/tailwind.color')
 module.exports = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,7 +10,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ...gray
+        ...colors
       },
       borderRadius: {
         'custom-sm':'0.25rem'
@@ -57,6 +57,10 @@ module.exports = {
           '0%': { transform : `rotate(0deg)`},
           '100%': { transform : `rotate(360deg)`}
         },
+        scaleCloverUp:{
+          '0%': { transform : `scale(1)`},
+          '100%': { transform : `scale(1.3)`}
+        },
         userListSettingsOut:{
           '0%': { transform: `translateX(0px)`, opacity: '0' },
           '100%': { transform: `translateX(336px)`, opacity: '1'}
@@ -64,6 +68,10 @@ module.exports = {
         userListSettingsIn:{
           '0%': { transform: `translateX(336px)`, opacity: '1' },
           '100%': { transform: `translateX(0px)`, opacity: '0'}
+        },
+        cellScale:{
+          '0%': { transform : `scale(0)`},
+          '100%': { transform : `scale(1.15)`}
         },
       },
       transitionProperty: {
@@ -81,8 +89,11 @@ module.exports = {
         slideCommentsIn: 'slideCommentsIn 0.5s forwards ease-in-out',
         downArrowRotateUp:'downArrowRotateUp 0.3s ease-in-out',
         downArrowRotateDown:'downArrowRotateDown 0.3s ease-in-out',
+        cloverPulse: 'scaleCloverUp 0.5s ease-in-out infinite alternate',
+        cellScale: 'cellScale 0.35s ease-in-out alternate',
       },
       backgroundImage: {
+        'overlay-black': 'linear-gradient(0deg, rgba(0, 0, 0, 0.65) 71.9%, rgba(0, 0, 0, 0.45) 81.9%, rgba(0, 0, 0, 0.27) 89.9%, rgba(0, 0, 0, 0) 100%)',
         'orange-yellow': 'linear-gradient(to right, #F5ED04, #F3C83B)',
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":

@@ -42,12 +42,13 @@ export const getSeries = async(page:number)=>{
     }
 }
 
-export const uploadImage = async(file:any)=>{
+export const uploadImage = async(file:File,seriesName:string)=>{
     try{
         const formData = new FormData();
         formData.append('image',file);
+        formData.append('seriesName',seriesName);
         const atToken = Cookies.get('accessToken');
-        const postFile = await axios.post('/media/upload',formData,{
+        const postFile = await axios.post('/media/upload/poster',formData,{
             headers:{
                 'Authorization':`Bearer ${atToken}`
             }
@@ -108,7 +109,6 @@ export const getDataView = async(seriesName:string):Promise<SeriesInfo>=>{
                 seriesName
             }
         })
-        console.log('This is getdata for viewpage: ',getData.data);
         return{
             AlternitiveNames:getData.data.AlternitiveNames,
             SeriesName:getData.data.SeriesName,
@@ -145,13 +145,12 @@ export const getDataView = async(seriesName:string):Promise<SeriesInfo>=>{
         }
     }
 }
-export const updateSeries = async(data:SeriesInfo,seriesName:string)=>{
-    console.log('SeriesName for the admin view page: ',seriesName);
-    console.log('ITS DTAA: ',data);
-    
+export const updateSeries = async(data:SeriesInfo)=>{
     try{
+        console.log('DATA: ',data);
+        
         const atToken = Cookies.get('accessToken');
-        const update = await axios.put(`/catalog/admin/series/${seriesName}`,data,{
+        const update = await axios.put(`/catalog/admin/series`,data,{
             headers:{
                 'Authorization':`Bearer ${atToken}`
             }

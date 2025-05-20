@@ -116,7 +116,7 @@ export class SeriesInfoService{
             return false;
         }
     }
-    async patchSeries(dto:InfoDto,seriesName:string){
+    async patchSeries(dto:InfoDto){
         try{
             const pathName = path.join(__dirname,`..`,`..`,`..`,`video/${dto.SeriesName}`);
             const isFolderExist = await this.checkFolderExists(pathName);
@@ -132,13 +132,32 @@ export class SeriesInfoService{
                         console.error(`Error: ${err}`);
                         
                     }
-                }
+                };
             }
-            const patch = await this.prisma.infoSeries.update({
+            const checkVoices = await fs.readdir(pathName);
+            const filteredVoices = checkVoices.filter((voice) => !dto.VoiceActing.includes(voice));
+            filteredVoices.map(item => fs.rm(path.join(pathName,item),{recursive:true}).catch(err => {throw new BadRequestException(`Error when tried to delete the voice folder!${err}`)}));
+            const patch = await this.prisma.infoSeries.upsert({
                 where:{
-                    SeriesName:seriesName
+                    SeriesName:dto.SeriesName
                 },
-                data:{
+                create:{
+                    AlternitiveNames:dto.AlternitiveNames,
+                    SeriesName:dto.SeriesName,
+                    SeriesViewName:dto.SeriesViewName,
+                    Studio:dto.Studio,
+                    ReleaseYear:dto.ReleaseYear,
+                    Shikimori:dto.Shikimori,
+                    AmountOfEpisode:Number(dto.AmountOfEpisode),
+                    Description:dto.Description,
+                    Genre:dto.Genre,
+                    VoiceActing:dto.VoiceActing || [],
+                    Status:dto.Status,
+                    Type:dto.Type,
+                    CurrentEpisode:dto.CurrentEpisode,
+                    NextEpisodeTime:dto.NextEpisodeTime
+                },
+                update:{
                     AlternitiveNames:dto.AlternitiveNames,
                     SeriesName:dto.SeriesName,
                     SeriesViewName:dto.SeriesViewName,
@@ -157,7 +176,7 @@ export class SeriesInfoService{
             })
             return patch;
         }catch(err){
-            console.error(`Error: ${err}`);
+            console.error(`Error: `,err);
             
             throw new BadRequestException(`Cannot update the series data!Error: ${err}`)
         }
@@ -456,8 +475,6 @@ export class SeriesInfoService{
                 return entry.VoiceActing.map((item,index)=>{
                     try{
                         const voiceFolderPath = path.join(__dirname,`..`,`..`,`..`,`video/${seriesName}/${item}`);
-                        console.log();
-                        
                         const items = fsSync.readdirSync(voiceFolderPath, { withFileTypes: true });
                         const folderCount = items.filter(item => item.isDirectory()).length;
                         return {voice:item,episodes:folderCount};
@@ -468,7 +485,7 @@ export class SeriesInfoService{
                     }
                 })
             })
-            return allData;
+            return allData.length > 0 ? allData : null;
             }catch(err){
                 console.error(`Couldn't get the voices!Error: ${err}`);
                 
@@ -521,21 +538,14 @@ export class SeriesInfoService{
                     SeriesName:true,
                     SeriesViewName:true,
                     NextEpisodeTime:true,
-
+                    _count:{
+                        select:{
+                            views:true
+                        }
+                    }
                 }
             });
-            const seriesViews = await this.prisma.views.groupBy({
-                by:['SeriesName'],
-                where:{
-                    SeriesName:{in:scheduleForDay.map((item:any)=>item.SeriesName)}
-                },
-                _count:true
-            });
-            const scheduleForDayWithViews = scheduleForDay.map((series:any)=>{
-                const seriesView = seriesViews.find((view:any)=>view.SeriesName === series.SeriesName);
-                return {...series,Views:seriesView?._count || 0}
-            })
-            return scheduleForDayWithViews;
+            return scheduleForDay;
         }catch(err){
             console.error(err);
             throw new BadRequestException(err);
@@ -611,10 +621,7 @@ export class VideoFormatterService{
     private rootPath:string = path.resolve(__dirname,`../../..`);
     async videoUpload(seriesName:string,episode:number,voice:string){
         try {
-            console.log(`RootPath: `, this.rootPath);
             const inputFile = path.join(__dirname, `..`, `..`, `..`, `video/${seriesName}/${voice}/${episode}/${seriesName}.mp4`);
-            console.log(seriesName);
-    
             const resolutions = [
                 { size: '1920x1080', name: '1080p.mp4' },
                 { size: '1280x720', name: '720p.mp4' },
@@ -628,7 +635,21 @@ export class VideoFormatterService{
     
             // Ждем, пока все задачи будут запущены, но НЕ дожидаемся завершения
             Promise.allSettled(tasks)
-                .then(results => console.log('Video conversion completed:', results))
+                .then(async (results) => {
+                    // Deleting the original file
+                    const allSucceeded = results.every(r => r.status === 'fulfilled');
+                    if (allSucceeded) {
+                        try {
+                        await fs.rm(inputFile);
+                        console.log('Original removed');
+                        } catch (e) {
+                        console.error('Failed to delete original:', e);
+                        }
+                    } else {
+                        console.warn('Some conversions failed — keeping original for retry');
+                    }
+                    console.log('Video conversion completed:', results);
+                })
                 .catch(err => console.error('Error in video conversion:', err));
     
             // Мгновенно возвращаем результат, пока видео в фоне обрабатывается

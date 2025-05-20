@@ -14,7 +14,16 @@ export default function UserAvatar({initialUserAvatar,owner}:{initialUserAvatar:
     const cropRef = useRef<HTMLDivElement | null>(null);
     const [file,setFile] = useState<File | null>(null);
     const [currentUserAvatar,setCurrentUserAvatar] = useState<string>(initialUserAvatar);
-    const [crop, setCrop] = useState<Crop | undefined>(undefined);
+    const initialCrop = makeAspectCrop(
+        {
+            unit: 'px',
+            width: 160,  
+        },
+        1,  
+        160,
+        160
+    );
+    const [crop, setCrop] = useState<Crop | undefined>(initialCrop);
     const [isShow,setIsShow] = useState(false);
     const [scale, setScale] = useState(1); 
     useEffect(()=>{
@@ -41,28 +50,6 @@ export default function UserAvatar({initialUserAvatar,owner}:{initialUserAvatar:
             setScale(1.05)
         }
     }, [isShow]);
-    useEffect(() => {
-        if (file) {
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            img.onload = () => {
-                const width = img.width;
-                const height = img.height;
-
-                const initialCrop = makeAspectCrop(
-                    {
-                        unit: 'px',
-                        width: 160,  
-                    },
-                    1,  
-                    160,
-                    160
-                );
-
-                setCrop(initialCrop);
-            };
-        }
-    }, [file]);
     const getCroppedImg = async (image: HTMLImageElement, crop: PixelCrop): Promise<Blob | null> => {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
@@ -116,7 +103,7 @@ export default function UserAvatar({initialUserAvatar,owner}:{initialUserAvatar:
                 return;
             }
             const formData = new FormData();
-            formData.append('file', croppedFile);
+            formData.append('image', croppedFile);
             const message = await axios.post('/user/avatar',formData,
             {
                 headers:{
@@ -139,13 +126,15 @@ export default function UserAvatar({initialUserAvatar,owner}:{initialUserAvatar:
         }
     }    
     return(
-        <div className={`flex p-2 w-[10rem] group h-[10rem] rounded-[4px] relative`}>
-            <img src={currentUserAvatar} className={`w-full object-cover h-full rounded-custom-sm ${owner && 'cursor-pointer'}`} alt=""/>
-            {owner && (
-                <button onClick={()=>setIsShow(true)} className="flex items-center transition-opacity duration-300 justify-center opacity-0 group-hover:opacity-100 z-50 inset-[8px] absolute bg-gray-200 bg-opacity-80 rounded-custom-sm ">
-                    <p className="text-white font-medium">Change avatar</p>
-                </button>
-            )}
+        <div className={`flex p-2 w-[10rem] h-[10rem] rounded-[4px] relative`}>
+            <div className='flex w-full h-full group'>
+                <img src={currentUserAvatar} className={`w-full object-cover h-full rounded-custom-sm ${owner && 'cursor-pointer'}`} alt=""/>
+                {owner && (
+                    <button onClick={()=>setIsShow(true)} className="flex items-center transition-opacity duration-300 opacity-0 group-hover:opacity-100 justify-center z-50 inset-[8px] absolute bg-gray-200 bg-opacity-80 rounded-custom-sm ">
+                        <p className="text-white font-medium">Change avatar</p>
+                    </button>
+                )}
+            </div>
             <input type="file" accept='image/*' className="hidden" id='file-upload' onChange={handleFileChange}/>
             {isShow && owner && (
                 <div className='flex fixed inset-0 justify-center z-30 items-center rounded-md overflow-hidden'>

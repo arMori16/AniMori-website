@@ -1,6 +1,8 @@
 import axios from "@/api/axios";
 import Cookies from "js-cookie";
 import { toast } from "react-toastify";
+import defaultAxios from "axios";
+import { VoicesType } from "@/components/player/types/voices.type";
 
 export const setSeriesRate = async(seriesName:string,value:number)=>{
     try{
@@ -153,7 +155,41 @@ export const deleteUserListItem = async(seriesName:string)=>{
         toast.error(`Couldn't delete item :(`)
     }
 }
+export const getShikimoriRating = async(shikimoriLink:string | null)=>{
+    try{
+        if(shikimoriLink){
+            const shikimoriData = await defaultAxios.get(shikimoriLink);
+            if(shikimoriData.status !== 200){
+                return null;
+            }
+            return shikimoriData.data;
+        }else{
+            return null;
+        }
+    }catch(error){
+        console.error(error);
+        return null;
+    }
+}
 
+export const sortVoices = (voices:VoicesType)=>{
+    const sortedVoices = voices.sort((a,b)=>{
+        if(a.episodes > b.episodes){
+            return -1;
+        }else if(a.episodes < b.episodes){
+            return 1;
+        }else{
+            return 0;
+        }
+    });
+    return sortedVoices;
+}
+
+export type ItemsRate = {
+    SeriesName:string;
+    Rate:number;
+    UserRate:number;
+}
 export const list = [
     {key:'Watching',value:'eye',color:'#DC27C4'},
     {key:'Planned',value:'calendar-days',color:'#F0D62C'},

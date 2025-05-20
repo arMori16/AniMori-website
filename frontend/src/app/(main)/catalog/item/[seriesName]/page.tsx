@@ -2,7 +2,7 @@
 import '@/app/(main)/catalog/item/[seriesName]/page.css'
 import axios from '@/api/axios';
 import defaultAxios from "axios";
-import { getSeriesData, getSeriesRate, getUserRate } from '@/components/catalog/item/item.logic';
+import { getSeriesData, getSeriesRate, getShikimoriRating, getUserRate } from '@/components/catalog/item/item.logic';
 import Rating from '@/components/catalog/item/rating';
 import UserList from '@/components/catalog/item/userList';
 import Comments from '@/components/comments/comments';
@@ -25,7 +25,7 @@ const ItemPage = async({params}:{params:{seriesName:string}})=>{
             </div>
         )
     }
-    const shikimoriRating = seriesData.data.Shikimori ? await defaultAxios.get(seriesData.data.Shikimori) : null;
+    const shikimoriRating = await getShikimoriRating(seriesData.data.Shikimori);
     const initializeRemainingTime = seriesData.data.NextEpisodeTime && new Date(seriesData.data.NextEpisodeTime).getTime() - new Date().getTime();
     const timeLeft = seriesData.data.NextEpisodeTime ? initializeRemainingTime > 0 ? intervalToDuration({ start: 0, end: initializeRemainingTime}) : null : null;
     let initializeTimeLeft = timeLeft;
@@ -36,7 +36,7 @@ const ItemPage = async({params}:{params:{seriesName:string}})=>{
             <div className='w-[68rem] max-w-full flex flex-col items-center  h-full shadow-[0px_-3px_12px_black]'>
                 <div className='flex relative p-5 w-[68rem] max-w-[96%] mt-[3rem] h-auto bg-gray-300 text-rose-50 rounded-lg flex-wrap'>
                     <div className='flex flex-col shadow-image rounded-br-md rounded-t-lg rounded-bl-md relative mr-5 custom-image:mr-0 w-[15.62rem] max-h-[24rem] custom-image:h-auto'>
-                        <Poster conteainerClass='flex max-h-[21.87rem] w-full rounded-t-lg' src={`${process.env.NEXT_PUBLIC_API}/media/${params.seriesName}/images`} alt={seriesData.data.SeriesName}/>
+                        <Poster conteainerClass='flex max-h-[21.87rem] w-full rounded-t-lg object-cover' src={`${process.env.NEXT_PUBLIC_API}/media/${params.seriesName}/images`} alt={seriesData.data.SeriesName}/>
                         <UserList seriesName={params.seriesName} seriesViewName={seriesData.data.SeriesViewName} userList={seriesData.userListItem}/>
                     </div>
                     <div className='flex flex-col'>

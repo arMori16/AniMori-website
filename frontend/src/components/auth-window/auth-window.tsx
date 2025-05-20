@@ -164,7 +164,7 @@ export default function AuthWindow(){
                 {isLoading && (
                     <div className='flex pointer-events-none flex-col-reverse items-center justify-center absolute inset-0 rounded-md z-20 bg-black bg-opacity-40'>
                         <p className='font-semibold text-[1.5rem] ml-2 text-white'>Loading...</p>
-                        <img src={`${process.env.NEXT_PUBLIC_API}/media/goose.gif/images`} className='flex w-[2.75rem] h-[2.75rem] rounded-xl' alt="" />
+                        <img src={`/images/goose.gif`} className='flex w-[2.75rem] h-[2.75rem] rounded-xl' alt="" />
                     </div>
                 )}
                 <form onSubmit={handleSubmit((data)=>{

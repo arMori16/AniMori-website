@@ -77,7 +77,7 @@ export default function ScheduleComponent({todayData,itemsRate,userListItems}:{t
                                             <p className="font-medium">{item.SeriesViewName}</p>
                                             <div className="flex items-center text-gray-500">
                                                 <i className="fa fa-eye text-[0.7rem] mr-1"></i>
-                                                <p className="text-[0.8rem]">{item.Views}</p>
+                                                <p className="text-[0.8rem]">{item._count.views}</p>
                                             </div>
                                             <div className="mt-auto z-20">
                                                 {<Rating initialRate={Number(item.Rate) || 0} initialUserRate={item.UserRate} seriesName={item.SeriesName}/>}

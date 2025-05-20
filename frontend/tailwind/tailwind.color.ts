@@ -24,12 +24,12 @@ const red = {
 
 const orange = {
     "orange-200": "#FFE600",
+    "orange-100": "#F7CA4C",
 };
 
 const purple = {
     "purple-300":'#352877'
 }
-
 module.exports = {
     ...gray,
     ...green,

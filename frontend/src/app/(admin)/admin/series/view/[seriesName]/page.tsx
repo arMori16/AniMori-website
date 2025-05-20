@@ -3,40 +3,37 @@
 import axios from "@/api/axios";
 import { getVoicesInfo } from "@/components/player/player.logic";
 import voiceStorage from "@/components/useZustand/player/zustandVoice";
-import menuStorage from "@/components/useZustand/zustandMenu";
 import { getDataView, handleDeleteEpisode, updateSeries } from "@/utils/admin.logic";
 import { SeriesInfo } from "@/utils/dto/adminDto/seriesInfo.dto";
 import { formatDate, formatToStandard } from "@/utils/formattDate";
 import YesNoButton from "@/features/handleYesNoButton";
-import useOutsideCommon from "@/hooks/useOutsideCommon";
-import ClientPoster from "@/Images/ClientPoster";
 import Cookies from "js-cookie";
-import { useEffect, useRef, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import Voices from "@/components/player/voices/voices";
+import { VoicesType } from "@/components/player/types/voices.type";
+import { faAngleDown } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import UploadPoster from "@/components/admin/uploadPoster";
+import { FileVideo2 } from "lucide-react";
 
 const ViewSeries = ({params}:{params:{seriesName:string}})=>{
     const {getEpisodes,setEpisodes,getVoice,setVoice} = voiceStorage();
-    const divRef = useRef<HTMLDivElement>(null); 
-    const mainRef = useRef<HTMLDivElement>(null); 
-    const [typeOfDelete,setTypeOfDelete] = useState<boolean>(); //True for delete full Voice, False for delete episode
+    const [voices,setVoicesData] = useState<VoicesType | null>(null); // All voices
+    const [typeOfDelete,setTypeOfDelete] = useState<boolean>();
     const [data,setData] = useState<SeriesInfo>();
-    const [voices,setVoices] = useState<any[]>([]);
-    const [showVoices,setShowVoices] = useState(false);
-    const [isShow,setIsShow] = useState<boolean>(false);
     const [showSubmit,setShowSubmit] = useState(false);
-    const [submitState,setSubmitState] = useState(false);
     const [isShowEpisode,setIsShowEpisode] = useState<boolean>(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-    const [episode,setEpisode] = useState<any>(1);
+    const [episode,setEpisode] = useState<number>(1);
     const [file, setFile] = useState<File | null>(null);
-    
     const handleFileChange = (e:any) => {
         const selectedFile = e.target.files[0] || null;
         setFile(selectedFile);
     }; 
     
-    const {register,handleSubmit,reset,watch,getValues} = useForm<SeriesInfo>({
+    const {register,handleSubmit,reset,watch,getValues,control} = useForm<SeriesInfo>({
         defaultValues:{
             AlternitiveNames: data?.AlternitiveNames,
             SeriesName: data?.SeriesName,
@@ -55,26 +52,40 @@ const ViewSeries = ({params}:{params:{seriesName:string}})=>{
         }
     })
     const status = watch("Status");
+    const description = watch("Description");
+    /* const handleDeleteSeriesEpisode = ()=>{
+        try{
+            if(getVoice()){
+                handleDeleteEpisode(params.seriesName, getVoice(), episode);
+            }else{
+                toast.error('Please select a voice!');
+            }
+        }catch(err){
 
-    useEffect(() => {
-        if (submitState) {
+        }
+    } */
+    const handleDeleteSubmit = ()=>{
+        if(getVoice()){
             if(typeOfDelete){
                 handleDeleteEpisode(params.seriesName, getVoice());
             }
             else{
+                console.log(`EPISODE DELETE: `,episode);
+                console.log(`VOICE DELTE: `,getVoice());
+                
                 handleDeleteEpisode(params.seriesName, getVoice(), episode);
             }
+        }else{
+            toast.error('Please select a voice!');
         }
-    }, [submitState]);
-    useEffect(()=>{
-        if(!showVoices){
-            toggleAnimation();
-
-        }
-    },[showVoices])
+    }
     const handleUploadFile = async()=>{
         if(!file){
             toast.info('Please select a file!');
+            return;
+        }
+        if(!voices || !getVoice()){
+            toast.info('Please add some voice first!');
             return;
         }
         try{
@@ -83,7 +94,7 @@ const ViewSeries = ({params}:{params:{seriesName:string}})=>{
             formData.append('file',file);
             formData.append('seriesName',params.seriesName);
             formData.append('voice',getVoice());
-            formData.append('episode',episode);
+            formData.append('episode',String(episode));
             const post = await axios.post('/catalog/upload/video',formData,{
                 headers:{
                     'Authorization':`Bearer ${atToken}`,
@@ -103,108 +114,64 @@ const ViewSeries = ({params}:{params:{seriesName:string}})=>{
     }
     
     const handleDataSubmit = (data:SeriesInfo)=>{
-        console.log(`DATA submit: `,data);
         if(data.NextEpisodeTime){
             try{
                 const time = formatToStandard(data.NextEpisodeTime)
-                console.log(`DATA FORMATTED: `,time);
-                
-                updateSeries({...data,NextEpisodeTime:time,CurrentEpisode:Number(data.CurrentEpisode)},params.seriesName);
+                updateSeries({...data,NextEpisodeTime:time,CurrentEpisode:Number(data.CurrentEpisode)});
             }catch(err){
                 if(err instanceof RangeError){
                     toast.info('Remember to write the month using only its first three letters.',{autoClose:10000})
-                    return toast.error('Invalid date format! Please enter a valid time.(ddMMM HH:mm)',{autoClose:false});
+                    return toast.error('Invalid date format! Please enter a valid time.(dd MMM HH:mm)',{autoClose:false});
                 }
                 return toast.error(`${err}`)
             }
         }else{
-            updateSeries(data,params.seriesName);
+            updateSeries(data);
         }
+        setVoicesData((prev)=>{
+            const existingSet = prev && new Set(voices?.map((item)=> item.voice));
+            const newAddedVoices = existingSet ? data.VoiceActing.filter((item:string)=>!existingSet?.has(item)) : data.VoiceActing;
+            const newVoices = newAddedVoices.map((item:string)=>({voice:item,episodes:0}));
+            if(prev){
+                return [...prev,...newVoices]
+            }else{
+                return newVoices;
+            }
+        });
     }
     const handleClear = ()=>{
         reset();
         
     }
     const deleteItem = (type: keyof SeriesInfo, index: number) => {
-        // Ensure 'data' exists and that 'type' is an array
         if (data && Array.isArray(data[type])) {
-            //GetValues
             const currentData = getValues();
             const typeData = getValues(`${type}`) as string[]
-            // Create a new array with the item removed
             const newArray = typeData.filter((_, i) => i !== index);
-            // Update the 'data' state with the new array
             setData((prev) => prev ? { ...prev, [type]: newArray } : undefined);
-    
-            // Optionally, reset the form with the updated 'data'
             reset({ ...currentData, [type]: newArray });
         }
     };
     useEffect(()=>{
         const fetchData = async()=>{
-            const data = await getVoicesInfo(params.seriesName);
-            console.log(`THIS IS DATA: `,data);
-            
-            setVoices(data);
-            if (data.length > 0) {
-                const foundVoice = data.find((item:any) => item.episodes > 0);
-                setVoice(foundVoice ? foundVoice.voice : data[0].voice);
-                setEpisodes(foundVoice ? foundVoice.episodes : data[0].episodes);
-            } else {
-                setVoice(null);
-                setEpisodes(null);
-            }
+            const voicesData:VoicesType | null = await getVoicesInfo(params.seriesName);
+            const data = await getDataView(params.seriesName);
+            setData(data);
+            setVoicesData(voicesData);
         }
         fetchData();
     },[]);
-    
-    const toggleAnimation = () => {
-        if (divRef.current && mainRef.current) {
-          if (isShow) {
-            divRef.current.classList.add("animate-slideVoiceIn");
-            setIsShow(false);
-            setTimeout(() => {
-              divRef.current?.classList.remove("flex");
-              mainRef.current?.classList.remove("rounded-b-none","rounded-t-lg","border-b-none");
-              mainRef.current?.classList.add("rounded-lg");
-              divRef.current?.classList.add("hidden");
-
-              divRef.current?.classList.remove("animate-slideVoiceIn");
-            }, 600);
-          } else {
-            divRef.current.classList.remove("hidden");
-            mainRef.current.classList.remove("rounded-lg")
-            mainRef.current.classList.add("rounded-b-none","rounded-t-lg","border-b-none")
-            divRef.current.classList.add("flex","animate-slideVoiceOut");
-            setIsShow(true);
-    
-            setTimeout(() => {
-              divRef.current?.classList.remove("animate-slideVoiceOut");
-            }, 600);
-          }
-        }
-      };
-    useEffect(()=>{
-        const fetchData = async()=>{
-            const data = await getDataView(params.seriesName);
-            setData(data);
-        }
-        fetchData()
-    },[params.seriesName])
     if(!data){
         return (
             <div className="text-3xl flex text-rose-50 w-full h-full justify-center">Loading...</div>
         )
     }
-    
     return(
         <div className="flex flex-col max-w-full w-full min-h-full">
             <form onSubmit={handleSubmit(handleDataSubmit)} className="flex max-w-full w-full max-h-full">
                 <div className='flex flex-col relative bg-[#3C3C3C] p-5 w-[68rem] max-w-[96%] max-h-full text-rose-50 rounded-lg flex-wrap'>
                     <div className="flex w-full min-h-[22rem]">
-                        <div className='flex relative mr-5 flex-shrink-0 custom-image:mr-0 w-[15.62rem]  h-[21.87rem] custom-image:h-auto'>
-                            <ClientPoster divClass="w-full flex" containerClass='flex h-full w-full rounded-lg object-cover' src={`${process.env.NEXT_PUBLIC_API}/media/${params.seriesName}/images`} alt={data.SeriesName}/>
-                        </div>
+                        <UploadPoster seriesName={params.seriesName}/>
                         <div className='flex flex-col min-h-[22rem]'>
                             <textarea className='text-3xl custom-xs:mt-0 flex bg-transparent min-h-[2.5rem] min-w-[2rem]' defaultValue={data.SeriesViewName} {...register('SeriesViewName')}></textarea>
                             <ul className='flex flex-col gap-y-1 mt-1'>
@@ -316,7 +283,7 @@ const ViewSeries = ({params}:{params:{seriesName:string}})=>{
                                             <span className="ml-1 flex items-center justify-center w-[1rem] p-[2px] group relative rounded-[50%] bg-gray-2E">
                                                 <i className="fa fa-question text-[0.75rem]"></i> 
                                                 <span className="absolute right-[-4.2rem] after:content-['']  after:absolute after:top-full after:border-t-[0.4rem] after:border-r-[0.5rem] after:border-t-black after:border-l-[0.5rem] after:left-[42%] after:border-x-transparent after:right-[44%] whitespace-nowrap pointer-events-none rounded-md py-1 px-2 bottom-[100%] mb-2 opacity-0 bg-black group-hover:opacity-100 transition-all delay-150 duration-500 z-10 translate-y-[6px] group-hover:translate-y-0  ease-out">
-                                                    (e.g 08Feb 17:00)
+                                                    (e.g 08 Feb 17:00)
                                                 </span>
                                             </span>:
                                             <textarea className="bg-transparent min-w-[2rem] ml-2" {...register('NextEpisodeTime')} defaultValue={data.NextEpisodeTime && formatDate(data.NextEpisodeTime)}></textarea>
@@ -357,7 +324,7 @@ const ViewSeries = ({params}:{params:{seriesName:string}})=>{
                     </div>
 
                     <div className='flex relative break-words w-[43.75rem] mt-9 ml-auto mr-auto'>
-                        <textarea className='bg-transparent flex items-start justify-start min-w-[2rem]' defaultValue={data.Description} {...register('Description')}></textarea>
+                        <textarea className='bg-transparent flex items-start justify-start min-w-[2rem]' style={!description ? {border:'1px solid white',borderRadius:'4px'} : {}} defaultValue={data.Description || 'Here should be description :>'} {...register('Description')}></textarea>
                     </div>
                     <div className="flex w-full h-[4rem] justify-end">
                         <div className="flex w-[10rem] gap-2 h-full mr-[5rem] items-center font-semibold text-[0.85rem]">
@@ -373,33 +340,17 @@ const ViewSeries = ({params}:{params:{seriesName:string}})=>{
             </form>
             {/* VoiceActing */}
             <div className="flex flex-col w-[68rem] max-w-[96%] min-h-[15rem] mt-5 p-5 bg-gray-300 rounded-lg">
-                <div className="flex w-full h-[3rem]">
-                    <div ref={mainRef} className={`flex flex-col rounded-lg box-border h-[1.75rem] relative w-[15rem] bg-gray-100 border-gray-600 border-[1px] font-normal mb-2 text-white text-[0.9rem] px-2`}>
-                        <button onClick={()=>{setShowVoices(true);toggleAnimation();}} className="flex h-[1.75rem] relative box-border w-full flex-grow items-center justify-between">
-                            <div className="flex h-full items-center w-full flex-grow">
-                                Voice {getVoice()}
-                            </div>
-                            <span className="flex w-[0.1rem] h-[60%] justify-center mr-2 bg-white py-[2px]"></span><img src={`http://localhost:3001/media/down-arrow/icons`} className={`flex w-[1.25rem] transform ${isShow ? 'rotate-[180deg]' : 'rotate-0'} h-[1.25rem] ${isShow ?'animate-downArrowRotateUp':'animate-downArrowRotateDown'}`} />
-                        </button>
-                        
-                        <div className="hidden max-w-[15rem] w-[15rem] left-[-1px] mr-0 box-border max-h-[12rem] absolute p-0 m-0 top-full px-2 bg-gray-100 border-gray-600 border-t-0 rounded-b-lg border-[1px] z-10 overflow-y-scroll" ref={divRef}>
-                            <div className="flex flex-col w-full gap-y-2">
-                                {voices.length > 0 && voices.map((item,index)=>(
-                                    <button key={index} onClick={()=>{toggleAnimation();setVoice(item.voice);setEpisodes(item.episodes)}} className={`flex w-full ${getVoice() === item.voice?'text-gray-300':''}`}>
-                                        Voice {item.voice}
-                                    </button>
-                                ))}
-                            </div>       
-                        </div>
-                    </div>
-                    <div className={`flex ml-4 flex-col ${isShowEpisode?'rounded-b-none rounded-t-lg':'rounded-lg'} box-border h-[1.75rem] relative w-[15rem] bg-gray-100 border-gray-600 border-[1px] font-normal mb-2 text-white text-[0.9rem] px-2`}>
-                        <button onClick={()=>setIsShowEpisode((prev)=>!prev)} className="flex h-[1.75rem] relative box-border w-full flex-grow items-center justify-between">
+                <div className="flex w-full">
+                    <Voices seriesName={params.seriesName} initializeVoiceInfo={voices}/>
+                    <div className={`flex ml-4 flex-col box-border h-[1.75rem] relative w-[15rem] font-normal mb-2 text-white text-[0.9rem]`}>
+                        <button onClick={()=>setIsShowEpisode((prev)=>!prev)} className={`flex ${isShowEpisode?'rounded-t-custom-sm border-b-transparent' : 'rounded-custom-sm'} bg-gray-100 border-gray-600 border-[1px] px-2 h-[1.75rem] relative box-border w-full flex-grow items-center justify-between`}>
                             <div className="flex h-full items-center w-full flex-grow">
                                 Episode {episode}
                             </div>
-                            <span className="flex w-[0.1rem] h-[60%] justify-center mr-2 bg-white py-[2px]"></span><img src={`http://localhost:3001/media/down-arrow/icons`} className={`flex w-[1.25rem] transform ${isShowEpisode ? 'rotate-[180deg]' : 'rotate-0'} ${isShowEpisode ?'animate-downArrowRotateUp':'animate-downArrowRotateDown'}`} />
+                            <span className="flex w-[0.1rem] h-[60%] justify-center mr-2 bg-white py-[2px]"></span>
+                            <FontAwesomeIcon icon={faAngleDown} className={`inline-flex w-[0.85rem]  fa fa-angle-down ${isShowEpisode ? 'rotate-[180deg]' : 'rotate-0'} transform origin-center transition-transform duration-200 h-[0.85rem]`} />
                         </button>
-                        <div className={`${isShowEpisode?'flex':'hidden'} max-w-[15rem] w-[15rem] left-[-1px] mr-0 box-border max-h-[12rem] absolute p-0 m-0 top-full px-2 bg-gray-100 border-gray-600 border-t-0 rounded-b-lg border-[1px] z-10 overflow-y-scroll`}>
+                        <div className={`flex ${isShowEpisode?'scale-y-100':'scale-y-0'} w-[15rem] mr-0 -mt-[1px] box-border max-h-[12rem] absolute p-0 m-0 top-full px-2 bg-gray-100 border-gray-600 border-t-0 rounded-b-lg border-[1px] z-10 overflow-y-scroll`}>
                             <div className="flex flex-col w-full gap-y-2">
                                 {Array.from({length:data.AmountOfEpisode},(item:number,index)=>(
                                     <button key={index} onClick={()=>{setIsShowEpisode((prev)=>!prev);setEpisode(index > getEpisodes() + 1? 1 : index + 1)}} className={`flex w-full ${ index > getEpisodes()?'pointer-events-none cursor-not-allowed text-[#c35c6a]':''} ${ index + 1 === episode?'text-gray-300':''}`}>
@@ -412,30 +363,25 @@ const ViewSeries = ({params}:{params:{seriesName:string}})=>{
                     </div>
                 </div>
                 <div className="flex max-w-full h-full bg-gray-100 border-gray-600 border-[1px] rounded-[0.25rem]">
-                    <label htmlFor="file-upload"  className="flex flex-grow max-w-full h-[9rem] items-center justify-center">
+                    <label htmlFor="file-upload"  className="flex flex-grow max-w-full cursor-pointer h-[9rem] items-center justify-center">
                         {file && (
                             <div>
                                 <p className="text-[1rem] font-medium text-rose-50">{file.name}</p>
                             </div>
                         )}
                         <div className={`flex flex-col items-center justify-center ${file?'hidden':''}`}>
-                            <img src={`http://localhost:3001/media/upload-icon/icons`} className="flex w-[3.2rem] h-[3.2rem]" alt="" />
+                            <FileVideo2 className={`w-[3.2rem] h-[3.2rem] text-white`}/>
                             <p className="flex text-[1rem] font-medium text-rose-50">Upload a video for {getVoice()} for the {episode} Episode</p>
                         </div>
                     </label>
                     <input type="file" accept="video/*" className="hidden" onChange={handleFileChange} id="file-upload"/>
                 </div>
-                {uploadProgress === null?(<></>):(
-                    <div className="flex w-full h-[1.75rem] text-white">
-                        <span>{uploadProgress}%  - You need to wait until the message shows!</span>
-                    </div>
-                )}
                 <div className="flex h-[1.85rem] mt-3 max-w-full justify-end">
                     <button onClick={()=>{setShowSubmit(true);setTypeOfDelete(true)}} className="flex h-full max-w-[8rem] w-full rounded-md text-[0.8rem] bg-red-button mr-4 font-medium text-rose-50 items-center justify-center">
                         delete voice
                     </button>
                     {showSubmit && (
-                        <YesNoButton setShowSubmit={setShowSubmit} setState={setSubmitState}/>
+                        <YesNoButton setShowSubmit={setShowSubmit} submitFunction={handleDeleteSubmit}/>
                     )}
                     <button onClick={()=>{setShowSubmit(true);setTypeOfDelete(false)}} className="flex h-full max-w-[8rem] w-full rounded-md text-[0.8rem] bg-red-button mr-4 font-medium text-rose-50 items-center justify-center">
                         delete episode

@@ -7,6 +7,7 @@ import { Response } from "express";
 import { PrismaService } from "src/prisma/prisma.service";
 import { SeriesInfoService } from "src/seriesInfo/seriesInfo.service";
 import * as path from "path";
+import { log } from "handlebars/runtime";
 
 
 
@@ -82,7 +83,7 @@ export class UserService{
             throw new BadRequestException(`Error setting last user series!Error: ${err}`)
         }
     }
-    async updateLastViewedSeries(userId:number,seriesName:string,episode:number,timeStopped:number){
+    async updateLastViewedSeries(userId:number,seriesName:string,episode:number,timeStopped:number,lastViewedDate:Date){
         try{
             const updatedLastViewed = await this.prisma.lastViewedSeries.update({
                 where:{
@@ -94,7 +95,8 @@ export class UserService{
                 },
                 data:{
                     Episode:episode,
-                    TimeStopped:timeStopped
+                    TimeStopped:timeStopped,
+                    LastViewed:lastViewedDate,
                 }
             })
             return updatedLastViewed;
@@ -103,17 +105,17 @@ export class UserService{
             
         }
     }
-    async getUserLastViewedSeries(userId:number){
+    async getUserLastViewedSeries(userId:number,take?:number){
         try{
             const userLastViewedSeries = await this.prisma.lastViewedSeries.findMany({
-                take:6,
+                ...(take ? {take:take} : {}),
                 orderBy:{
                     LastViewed:'desc'
                 },
                 where:{
                     UserId:userId
                 },
-            
+                distinct:['SeriesName'],
             });
             const seriesNames:string[] = userLastViewedSeries.map((item:any,index:number)=>{
                 return item.SeriesName;
@@ -377,6 +379,85 @@ export class UserService{
                 }
             })
             return scheduleUserListItems;
+        }catch(err){
+            console.error(err);
+            throw new BadRequestException(err)
+        }
+    }
+    async getLastViewed(userId:number,take:number,skip:number){
+        try{
+            const lastViewedSeries = await this.prisma.lastViewedSeries.findMany({
+                take:take || 15,
+                skip:skip || 0,
+                where:{
+                    UserId:userId
+                },
+                orderBy:{
+                    LastViewed:'desc'
+                },
+                select:{
+                    TimeStopped:true,
+                    Episode:true,
+                    SeriesName:true,
+                    SeriesViewName:true,
+                    LastViewed:true,
+                    series:{
+                        select:{
+                            _count:{
+                                select:{
+                                    views:true
+                                }
+                            }
+                        }
+                    }
+                },
+                distinct:['SeriesName']
+            })
+            const seriesNames = lastViewedSeries.map((item:any)=>item.SeriesName);
+            const userListItems = await this.prisma.userList.findMany({
+                where:{
+                    UserId:userId,
+                    SeriesName:{in:seriesNames}
+                }
+            })
+            const lastViewedUserRating = await this.prisma.$queryRaw<
+                Array<{ SeriesName: string;avgRate:number ;userRate: number | null }>
+                >(
+                Prisma.sql`
+                    SELECT
+                    "SeriesName",
+                    AVG("Value")::float AS avgRate,
+                    MAX(
+                        CASE 
+                        WHEN "UserId" = ${userId} THEN "Value"
+                        ELSE NULL
+                        END
+                    )::float AS userRate
+                    FROM "Rate"
+                    WHERE "SeriesName" IN (
+                    ${Prisma.join(
+                        seriesNames.map(name => Prisma.sql`${name}`)
+                    )}
+                    )
+                    GROUP BY "SeriesName"
+                `
+                );
+
+            const userListMap = new Map(
+                userListItems.map((item: any) => [item.SeriesName, item])
+            );
+              
+            const ratingMap = new Map(
+                lastViewedUserRating.map((item: any) => [item.SeriesName, item])
+            );
+            const lastViewed = lastViewedSeries.map((item: any) => {
+                return {
+                  ...item,
+                  userList: userListMap.get(item.SeriesName) || null,
+                  rating: ratingMap.get(item.SeriesName) || null
+                };
+            });
+            return lastViewed;
         }catch(err){
             console.error(err);
             throw new BadRequestException(err)

@@ -3,7 +3,7 @@ import useOutsideCommon from "../hooks/useOutsideCommon";
 import { useRef, useState } from "react";
 
 
-const YesNoButton = ({setState,setShowSubmit}:{setState:React.Dispatch<React.SetStateAction<boolean>>,setShowSubmit:React.Dispatch<React.SetStateAction<boolean>>})=>{
+const YesNoButton = ({setShowSubmit,submitFunction}:{submitFunction:()=>void,setShowSubmit:React.Dispatch<React.SetStateAction<boolean>>})=>{
     const divRef = useRef<HTMLDivElement>(null);
     const componentRef = useRef<HTMLDivElement>(null);
     useOutsideCommon({refs:[componentRef],onOutsideClick:()=>setShowSubmit(false)});
@@ -23,7 +23,7 @@ const YesNoButton = ({setState,setShowSubmit}:{setState:React.Dispatch<React.Set
                     <button onClick={()=>setShowSubmit(false)} className="flex bg-gray-800 text-gray-500 h-[3rem] rounded-[0.25rem] w-[45%] items-center justify-center p-1">
                         Cancel
                     </button>
-                    <button onClick={()=>{setState(true);setShowSubmit(false)}} className="flex text-white bg-red-400 h-[3rem] ml-2 rounded-[0.25rem] w-[45%] items-center justify-center p-1">
+                    <button onClick={()=>{submitFunction();setShowSubmit(false)}} className="flex text-white bg-red-400 h-[3rem] ml-2 rounded-[0.25rem] w-[45%] items-center justify-center p-1">
                         Delete
                     </button>
                 </div>

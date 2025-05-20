@@ -26,21 +26,16 @@ const InfiniteScroll = ({type,fetchedData,children,componentRef,isWindow,styles}
     };
 
     useEffect(()=>{
-        console.log('FetchedData: ',fetchedData);
-        
         if (fetchedData.length > 0 && fetchedData) {
             setHasMore(fetchedData.length === 15);
             setLoading(false);
         }else{
-            console.log('No more data. Setting hasMore to false.');
             setHasMore(false); // No more data to load
         }
     },[page,commentPage,fetchedData])
     const handleScroll = debounce(() => {
         const target = isWindow ? window : componentRef.current;
         if (!target || loading || !hasMore) return;
-        
-        console.log('It is handleScroll!',loading);
         if (isWindow) {
             // Handle window scrolling
             const scrollTop = window.scrollY;
@@ -59,7 +54,6 @@ const InfiniteScroll = ({type,fetchedData,children,componentRef,isWindow,styles}
       
             if (scrollTop + clientHeight >= scrollHeight * 0.75) {
               setLoading(true);
-              console.log('IM HERE');
               typeMapping[type].pageSetter(typeMapping[type].getter() + 1);
             }
           }

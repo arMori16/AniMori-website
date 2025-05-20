@@ -32,7 +32,7 @@ const Navbar = ({user,userFirstName}:{user:any,userFirstName?:any | null}) => {
     }, []);
     return (
         <nav className='flex relative flex-col items-center bg-gray-300'>
-            <div className='flex fixed top-0 left-0 w-full h-[80%] bg-[url("http://localhost:3001/media/main3.jpeg/images")] bg-cover z-[-1]' style={{ backgroundPosition: "center -14rem",aspectRatio: "12/4" }}>
+            <div className='flex fixed top-0 left-0 w-full h-[80%] bg-[url("http://localhost:3000/images/main3.jpeg")] bg-cover z-[-1]' style={{ backgroundPosition: "center -14rem",aspectRatio: "12/4" }}>
             </div>
             <div className={`custom-md-lg:flex hidden fixed top-[94%] w-full h-[3rem] bg-[rgb(34,34,34)] border-t-2 bg-opacity-90 border-green-400 z-50`}>
                 <div className={`flex h-full w-full justify-around`}>
@@ -65,7 +65,7 @@ const Navbar = ({user,userFirstName}:{user:any,userFirstName?:any | null}) => {
                     )}
                 </div>
             </div>
-            <div className={`flex ${isFixed ? 'custom-md-lg:hidden fixed top-0 w-full h-[3rem] bg-[rgb(34,34,34)] border-b-2 bg-opacity-90 border-green-400' : 'absolute bottom-[-2rem] w-[80%] h-[3.50rem] rounded-lg bg-gray-300 shadow-[0px_3px_10px_black]'} custom-xs:justify-between gap-x-2 z-20`}>
+            <div className={`flex ${isFixed ? `custom-md-lg:hidden fixed top-0 w-full h-[3rem] bg-[rgb(34,34,34)] border-b-2 bg-opacity-90 border-green-400` : 'absolute bottom-[-2rem] w-[80%] h-[3.50rem] rounded-lg bg-gray-300 shadow-[0px_3px_10px_black]'} transition-all duration-300 origin-top custom-xs:justify-between gap-x-2 z-20`}>
                 <div className={`flex ml-5 custom-image:ml-3 relative h-full items-center`}>
                     <div className='flex relative justify-items-center items-center h-full'>
                         <div className='flex relative w-[2.50rem] h-[2.50rem]'>
@@ -91,16 +91,7 @@ const Navbar = ({user,userFirstName}:{user:any,userFirstName?:any | null}) => {
                             <p className={`${isFixed && 'hidden'}`}>Home</p>
                         </Link>
                     </div>
-                    <div className='flex h-full mx-2 gap-x-4 items-center relative group text-[1rem] font-medium text-white'>
-                        <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-[grid-template-rows] duration-500 ease-out w-[7rem] rounded-b-sm opacity-100 absolute right-[-0.5rem] top-full z-50 bg-gray-2E text-white">
-                            <div className="overflow-hidden flex flex-col">
-                                <Link href={'/catalog/top'} className="flex border-b border-gray-500 hover:text-green-400 items-center whitespace-nowrap justify-center w-full h-[2rem]">
-                                    <i className="fa-solid fa-chart-simple text-[0.85rem] mr-1"></i>
-                                    <p>TOP-100</p>
-                                </Link>
-                            </div>
-                        </div>
-
+                    <div className='flex h-full mx-2 gap-x-4 group items-center relative group text-[1rem] font-medium text-white'>
                         <Link href={`/catalog`} className={`flex group items-center relative duration-300 ease-in-out ${!isFixed && 'hover:text-green-400 uppercase'}`}>
                             <i className={`fa-solid ${isFixed && 'group-hover:text-green-400'} fa-newspaper pt-[2px] text-[0.85rem] mr-1`} aria-hidden="true"></i>
                             <p className={`${isFixed && 'hidden'}`}>Catalog</p>
@@ -110,6 +101,12 @@ const Navbar = ({user,userFirstName}:{user:any,userFirstName?:any | null}) => {
                                 </span>
                             )}
                         </Link>
+                        <div className="hidden group-hover:visible group-hover:flex duration-500 ease-out w-[7.75rem] rounded-b-custom-sm opacity-100 absolute right-[-0.5rem] top-full z-50 bg-gray-2E text-white">
+                            <Link href={'/catalog/top'} className="flex hover:text-green-400 items-center whitespace-nowrap justify-center w-full h-[2rem]">
+                                <i className="fa-solid fa-chart-simple text-[0.85rem] mr-1"></i>
+                                <p>TOP-100</p>
+                            </Link>
+                        </div>
                     </div>
                 </div>
                 <div className='flex items-center'>

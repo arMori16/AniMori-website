@@ -6,11 +6,13 @@ services:
     ports:
       - 8081:8080
     environment:
-      - DATABASE_HOST=localhost
+      - DATABASE_HOST=dev-db
       - DATABASE_USER=arMori
       - DATABASE_PASSWORD=BODAzopa2020
     depends_on:
       - dev-db
+    networks:
+      - armori
   dev-db:
     image: postgres:16
     ports:

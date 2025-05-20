@@ -48,9 +48,9 @@ export class SeriesInfoController{
     }
 
     @UseGuards(AdminGuard)
-    @Put('admin/series/:seriesName')
-    async patchSeries(@Body() dto:InfoDto,@Param('seriesName') seriesName:string){
-        return await this.service.patchSeries(dto,seriesName);
+    @Put('admin/series')
+    async patchSeries(@Body() dto:InfoDto){
+        return await this.service.patchSeries(dto);
     }
     @Public()
     @Get('items/time')
@@ -145,8 +145,7 @@ export class SeriesInfoController{
     @Post('/upload/video')
     async postVideo(@UploadedFile() file: Express.Multer.File,@Body('episode') episode:number,@Body('seriesName') seriesName:string,@Body('voice') voice:string){
         try{
-            const pathName = path.join(__dirname,"..",`..`,`..`,`video/${seriesName}/${voice}/${episode}`);
-            console.log('This is new pathName : ',pathName);
+            const pathName = path.join(__dirname,"..",`..`,`..`,`video/${seriesName}/${voice}/${Number(episode)}`);
             const isExist = await this.service.checkFolderExists(pathName);
             if(!isExist){
                 await fs.mkdir(pathName,{recursive:true}).catch((err)=>{
@@ -158,7 +157,7 @@ export class SeriesInfoController{
             await fs.writeFile(writePathName,file.buffer).catch((err)=>{
                 throw new BadRequestException(`Can't save file to path!\n${err}`);
             })
-            return await this.videoService.videoUpload(seriesName,episode,voice)
+            return await this.videoService.videoUpload(seriesName,Number(episode),voice)
         }catch(err){
             console.error(`EROR: ${err}`);
             
@@ -193,8 +192,6 @@ export class SeriesInfoController{
                 console.error('Invalid token:', err);
             }
         }
-        console.log(`USERID: `,userId);
-        
         return await this.service.getItemsRate(seriesNames,userId);
     }
     @Public()

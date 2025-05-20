@@ -41,8 +41,8 @@ const Series = ()=>{
             <div className="flex w-full justify-center mb-5">
                 <SearchBar isAdmin={true} model={'catalog'}/>
             </div>
-            <div className="flex max-w-full w-full h-[35rem] p-5 bg-[#352877] rounded-md">
-                <div className="flex overflow-scroll w-full h-full max-w-full bg-[#352877] p-5 rounded-lg text-[1rem] text-rose-50 font-medium" ref={divRef}>
+            <div className="flex max-w-full w-full h-[35rem] p-5 bg-gray-2E rounded-md">
+                <div className="flex overflow-scroll w-full h-full max-w-full bg-gray-2E p-5 rounded-lg text-[1rem] text-rose-50 font-medium" ref={divRef}>
                     <InfiniteScroll type={'series'} componentRef={divRef} styles={'flex flex-col w-full h-full'} fetchedData={seriesInfo}>
                         {seriesShowInfo.map((item,index)=>(
                             <div key={index} className="flex w-full h-[3.5rem] items-center border-b-2 border-white p-1">

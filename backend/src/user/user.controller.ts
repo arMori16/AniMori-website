@@ -22,7 +22,7 @@ export class UserController{
     }
     @Public()
     @Get('/profile/info')
-    async getUserProfileInfo(@Req() req:Request,@Query('userId') userId?:number){
+    async getUserProfileInfo(@Req() req:Request,@Query('userId') userId?:number,@Query("take") take?:number){
         let userAuthId:number | null;
         if (req.headers.authorization) {
             try {
@@ -33,7 +33,7 @@ export class UserController{
                 console.error('Invalid token:', err);
             }
         }
-        const userLastViewedSeries = await this.service.getUserLastViewedSeries(userId || userAuthId);
+        const userLastViewedSeries = await this.service.getUserLastViewedSeries(userId || userAuthId,take);
         const userInfo = await this.service.getUserProfileInfo(userId || userAuthId);
         return {userInfo:userInfo,userLastViewedSeries:userLastViewedSeries,Owner:userId === Number(userAuthId)}
     }
@@ -42,8 +42,8 @@ export class UserController{
         return await this.service.setLastViewedSeries(seriesName,Number(episode),userId,seriesViewName,Number(timeStopped) || null)
     }
     @Put('/lastViewedSeries')
-    async updateLastViewedSeries(@Body('seriesName') seriesName:string,@Body('episode') episode:number,@GetCurrentUserId() userId:number,@Body('timeStopped') timeStopped:string){
-        return await this.service.updateLastViewedSeries(userId,seriesName,episode,Number(timeStopped))
+    async updateLastViewedSeries(@Body('seriesName') seriesName:string,@Body('episode') episode:number,@GetCurrentUserId() userId:number,@Body('timeStopped') timeStopped:string,@Body('lastViewedDate') lastViewedDate:Date){
+        return await this.service.updateLastViewedSeries(userId,seriesName,episode,Number(timeStopped),lastViewedDate)
     }
     @UseGuards(AtGuard)
     @UseInterceptors(FileInterceptor('image'))
@@ -146,5 +146,10 @@ export class UserController{
     @Get('/avatar/:userId')
     async getAvatarById(@Param('userId') userId:number,@Res() res:Response){
         return await this.service.getAvatar(userId,res);
+    }
+    @UseGuards(AtGuard)
+    @Get('/lastViewed')
+    async getLastViewed(@Query('userId') userId:number,@Query('take') take:number, @Query('skip') skip:number){
+        return await this.service.getLastViewed(userId,take,skip);
     }
 }

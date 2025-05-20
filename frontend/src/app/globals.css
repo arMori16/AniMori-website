@@ -24,6 +24,9 @@
     outline-style: none;
 
   }
+  .info:hover ~ .additional-info{
+    transform: scaleY(1);
+  }
   textarea:hover{
     border-radius: 0.25rem;
     outline-style: solid;

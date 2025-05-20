@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Controller, Get, Param, Post, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import { BadRequestException, Body, ConflictException, Controller, Get, Param, Post, Res, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
 import { MediaService } from "./media.service";
 import { Public } from "src/common/decorators/public.decorator";
 import * as path from "path";
@@ -56,26 +56,32 @@ export class MediaController{
 
     }
     @UseGuards(AdminGuard)
-    @Post('/upload')
+    @Post('/upload/poster')
     @UseInterceptors(FileInterceptor('image'))
-    async addImage(@UploadedFile() file){
+    async changeSeriesPoster(@UploadedFile() file,@Body('seriesName') seriesName:string){
         try{
             const firstPath = path.join(__dirname,'..','..','..',`public/images`);
-            const fileName = file.originalname;
-            const pathName = path.join(firstPath,fileName);
-            const fileExists = await fs
-            .access(pathName)
-            .then(() => true) // File exists
-            .catch(() => false); // File does not exist
+            const ext = path.extname(file.originalname);
+            const pathName = path.join(firstPath,seriesName + ext);
+            const extensions = ['jpg', 'png', 'jpeg', 'webp','avif'];
+            for (const ext of extensions) {
+                const potentialPath = `${firstPath}/${seriesName}.${ext}`; // Используем текущее расширение
+                try {
+                    await fs.access(potentialPath); // Проверяем наличие файла
+                    await fs.rm(potentialPath,{force:true}); // Удаляем файл
 
-            if (fileExists) {
-                await fs.rm(pathName);
+                } catch (err) {
+                    console.error(`File not found: ${potentialPath}`); // Сообщаем, что файл не найден
+                }
             }
+            
             await fs.writeFile(pathName,file.buffer).catch((err)=>{
-            throw new BadRequestException(`Can't save file to path!\n${err}`);
+                throw new BadRequestException(`Can't save file to path!\n${err}`);
             })
         }catch(err){
-            throw new BadRequestException('Error when tried to upload an image!')
+            console.error(err);
+            
+            throw new BadRequestException(`Error when tried to upload an image!\nMessage: ${err.message}`);
         }
     }
 }

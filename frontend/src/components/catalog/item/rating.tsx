@@ -5,7 +5,7 @@ import { deleteUserRate, getSeriesRate, getUserRate, setSeriesRate } from './ite
 import Cookies from 'js-cookie';
 import { toast } from 'react-toastify';
 
-const Rating = ({ initialRate, initialUserRate,seriesName}: { initialRate: number,seriesName: string,initialUserRate: number}) => {
+const Rating = ({ initialRate, initialUserRate,seriesName}: { initialRate: number,seriesName: string,initialUserRate: number | null}) => {
     const [isShow, setIsShow] = useState<boolean>(false);
     const [trigger,setTrigger] = useState<boolean>(false);
     const [rate, setRate] = useState<number>(initialRate);
@@ -75,7 +75,7 @@ const Rating = ({ initialRate, initialUserRate,seriesName}: { initialRate: numbe
         <div className="flex h-[2.35rem] max-sw-full items-center">
             <button onClick={handleRateClick} type='button' className="flex w-[1.25rem] z-20 h-[1.25rem]">
                 <img
-                    src={`http://localhost:3001/media/star.svg/icons`}
+                    src={`/icons/star.svg`}
                     className="flex w-full h-full"
                     alt=""
                 />
@@ -113,7 +113,7 @@ const Rating = ({ initialRate, initialUserRate,seriesName}: { initialRate: numbe
             {userRate && (
                 <div className='flex w-[3rem] h-[1.25rem] items-center'>
                     <img
-                            src={`http://localhost:3001/media/star.svg/icons`}
+                            src={`/icons/star.svg`}
                             className="flex w-[30%] h-[60%]"
                             alt=""
                         />

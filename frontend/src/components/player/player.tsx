@@ -157,12 +157,12 @@ const Player = ({ seriesViewName,seriesName }: { seriesName: string,seriesViewNa
             console.log(`TIME :: `,data.time);
             playRef.current.currentTime = data.time
             if (isShowPlay) {
-                toggleShowPlay(true);
+                toggleShowPlay();
                 toggleControlsVisibility();
             } else {
                 console.log(`OOOH YEAH!`);
                 
-                togglePlayPause(true);
+                togglePlayPause();
             }
         };
     
@@ -430,7 +430,7 @@ const Player = ({ seriesViewName,seriesName }: { seriesName: string,seriesViewNa
                     </div>
                 )}
                 <div className="flex rounded-t-xl flex-grow overflow-hidden items-center justify-center">
-                    <video ref={playRef} controls={false} className='block flex-grow w-full object-contain video relative max-h-[34rem] rounded-lg' src={`${process.env.NEXT_PUBLIC_API}/catalog/${seriesName}/${encodeURIComponent(getVoice())}/${getNumOfEpisode()}/1080p`}></video>
+                    <video ref={playRef} onClick={()=>togglePlayPause()} controls={false} className='block flex-grow w-full object-contain video relative max-h-auto rounded-lg' src={`${process.env.NEXT_PUBLIC_API}/catalog/${seriesName}/${encodeURIComponent(getVoice())}/${getNumOfEpisode()}/1080p`}></video>
                 </div>
                     <div className={`flex backdrop-blur-xl ${isShowPlay ? 'hidden' : 'visible'} controls ${isControlsVisible ? 'flex visible' : 'hidden'} absolute z-0 custom-xs:p-[6px] bottom-0 inset-x-0 flex-grow max-w-full items-center p-3 justify-between`}>
                         <div className="flex items-center">

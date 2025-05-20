@@ -1,9 +1,11 @@
 'use server'
+import { getItemsRate } from '@/components/catalog/item/item.logic';
 import Announcements from '@/components/mainPageComponent/announcement/AnnouncementComponent';
-import CarouselWrapper from '@/components/mainPageComponent/carouselWrapper/carouselWrapper';
+import CarouselWrapper, { SeasonedSeries } from '@/components/mainPageComponent/carouselWrapper/carouselWrapper';
 import TabsComponent from '@/components/mainPageComponent/tabs-content/tabs';
 import SearchBar from '@/components/navbar-components/search-bar/search-bar';
 import getSeriesInfo, { getPageCount, getSeasonedCatalog } from '@/utils/getSeriesInfo';
+import { AxiosResponse } from 'axios';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -11,7 +13,10 @@ export default async function Home({searchParams}:{searchParams:{page:number}}) 
   
   const seriesInfo = await getSeriesInfo({page:searchParams.page - 1,skipPage:16,take:16});
   const counts = await getPageCount({divideNumber:16}) || 1;
-  const data = await getSeasonedCatalog();
+  const data:AxiosResponse<SeasonedSeries[],any> = await getSeasonedCatalog();
+  const seasonedSeriesRate = await getItemsRate(data.data.map(item=>item.SeriesName));
+  console.log('SEASONED SERIES RATE: ',seasonedSeriesRate);
+  
   if(searchParams.page > counts){
     notFound()
   }
@@ -21,8 +26,8 @@ export default async function Home({searchParams}:{searchParams:{page:number}}) 
           <div className={`custom-md-lg:flex mt-[3rem] hidden w-full relative ml-auto items-center justify-center`}>
               <SearchBar isAdmin={false} model='catalog'/>
           </div>
-          <div className='block w-full flex-grow max-w-[1300px]'>
-            <CarouselWrapper seasonedAnime={data.data}/>
+          <div className='flex justify-center w-full flex-grow max-w-[1385px]'>
+            <CarouselWrapper seasonedAnime={data.data} seasonedSeriesRate={seasonedSeriesRate}/>
           </div>
           <div className='flex relative my-4 w-full max-w-[70.25rem]'>
             <Announcements />
